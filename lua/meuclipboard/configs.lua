@@ -1,8 +1,10 @@
 local M = {}
 
-M.editar_padrao = false
+-- M.editar_padrao = false
+M.edit_default= false
 
-M.colar_depois = false	-- nvim_put(.after)
+-- M.colar_depois = false	-- nvim_put(.after)
+M.paste_after = false	-- nvim_put(.after)
 -- |a| <- Cursor
 -- follow = true
 -- a|a|a -> aXXX|a|a
@@ -10,10 +12,13 @@ M.colar_depois = false	-- nvim_put(.after)
 -- a|a|a -> aXX|X|aa
 --
 -- nvim_put(.follow)
-M.colar_mover_cursor = false
-M.nova_linha = false
+-- M.colar_mover_cursor = false
+M.paste_move_cursor = false
+-- M.nova_linha = false
+M.new_line = false
 
-M.altura_lista = nil
+-- M.altura_lista = nil
+M.list_height = nil
 
 -- Normalmente `pre_count` se refere ao último `count` passado, mas pode ficar meio estranho se você pedir para repetir o último e/ou passar um novo `count`.
 -- "passar `count`" se refere a qualquer count diferente de 1.
@@ -36,6 +41,7 @@ M.altura_lista = nil
 -- |        true          |  false  |    1    (0), `pre_count` (1), `pre_count` (2) |		// Repetir o último
 -- |        false         |  true   | `count` (0),   `count`   (1),   `count`   (2) |		// Passar `count` diretamente
 -- |        true          |  true   | `count` (0), `pre_count` (1),   `count`   (2) |		// Repetir para o último para o comando mesmo passando `count`
-M.novo_count = 1
+-- M.novo_count = 1
+M.new_count = 1
 
 return M
