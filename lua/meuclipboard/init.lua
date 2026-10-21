@@ -7,16 +7,16 @@ M.configs = require("meuclipboard.configs")
 M.dir_config = vim.fn.stdpath('data') .. "/meuclipboard/"
 
 local lgit_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
-M.vpasta_raiz = ''
+M.vroot_folder = ''
 if vim.v.shell_error == 0 then
-	M.vpasta_raiz = lgit_root
+	M.vroot_folder = lgit_root
 else
-	M.vpasta_raiz = vim.fn.getcwd()
+	M.vroot_folder = vim.fn.getcwd()
 end
 
 
-if vim.uv.fs_stat(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt") then
-	M.transferencia = vim.fn.readfile(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+if vim.uv.fs_stat(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt") then
+	M.clipboard = vim.fn.readfile(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 end
 
 -- function M.pasta_raiz()
@@ -30,90 +30,95 @@ end
 -- end
 
 -- Base: Salvar e colar
+-- Base: Save and paste
 -- // ----------------------------------------------------------
 
----@param dados? string
+---@param data? string
 -- Usa o prompt do neovim para salvar o texto que deseja
-function M.salvar(dados)
-	if not dados then
-		dados = vim.fn.input({ prompt = "Texto para salvar: "})
+-- Uses neovim prompt to save the desired text
+function M.save(data)
+	if not data then
+		data = vim.fn.input({ prompt = "Text to save: "})
 	end
 
-	if dados == "" then
+	if data == "" then
 		return
 	end
 
-	vim.fn.writefile({ dados }, M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt", "a")
+	vim.fn.writefile({ data }, M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt", "a")
 end
 
----@param dados? string
---Mesmo que `salvar()`, porém em vez do prompt do neovim, `vim.fn.input()`, usa uma caixa flutuante, `vim.ui.input()`.
---REQUER `dressing.nvim`
+---@param data? string
+-- Mesmo que `save()`, porém em vez do prompt do neovim, `vim.fn.input()`, usa uma caixa flutuante, `vim.ui.input()`.
+-- REQUER `dressing.nvim`
+-----
+-- Same as `save()`, however instead of using neovim's prompt, `vim.fn.input()`, it uses a floating box, `vim.ui.input()`.
+-- REQUIRES `dressing.nvim`
 --_`TODO:` Mudar para snacks.nvim_
-function M.salvarP(dados)
-	if not dados then
-		vim.ui.input({ prompt = "Texto para salvar: " }, function(entrada) dados = entrada end)
+function M.salvarP(data)
+	if not data then
+		vim.ui.input({ prompt = "Texto para salvar: " }, function(input) data = input end)
 	end
 
-	if dados == "" then
+	if data == "" then
 		return
 	end
 
-	vim.fn.writefile({ dados }, M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt", "a")
+	vim.fn.writefile({ data }, M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt", "a")
 end
 
 M.pre_index = 1
 M.pre_count = 1
 
----@param repetir_ultimo_index? boolean 
----@param repetir_ultimo_count? boolean
+---@param repeat_last_index? boolean 
+---@param repeat_last_count? boolean
 ---@return integer|nil
-function M.colar(repetir_ultimo_index, repetir_ultimo_count)
+function M.paste(repeat_last_index, repeat_last_count)
 	local index
 	local count
 
-	if repetir_ultimo_index then
+	if repeat_last_index then
 		index = M.pre_index
 	else
 		index = tonumber(vim.fn.input({ prompt = "Index : "}))
 	end
 
-	if repetir_ultimo_count then
+	if repeat_last_count then
 		count = M.pre_count
 	else
 		count = vim.v.count1
 	end
 
-	if M.configs.novo_count == 0 then
+	if M.configs.new_count == 0 then
 		M.pre_count = vim.v.count1
 		-- print("[0]: " .. M.pre_count)
-	elseif M.configs.novo_count == 1 and not repetir_ultimo_count then
+	elseif M.configs.new_count == 1 and not repeat_last_count then
 		M.pre_count = vim.v.count1
 		-- print("[1]: " .. M.pre_count)
-	elseif M.configs.novo_count == 2 and not (repetir_ultimo_count and vim.v.count1 == 1) then
+	elseif M.configs.new_count == 2 and not (repeat_last_count and vim.v.count1 == 1) then
 		M.pre_count = vim.v.count1
 		-- print("[2]: " .. M.pre_count)
 	end
 
     if not index or index % 1 ~= 0 then
-		print("Número inválido.")
+		print("Invalid number.")
 		return
     end
 
-	local texto = vim.fn.readfile(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")[index]
-	if not texto then
-		print("Item inexistente.")
+	local text = vim.fn.readfile(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")[index]
+	if not text then
+		print("Inexisting item.")
 		return
 	end
 
-	if M.configs.nova_linha then
+	if M.configs.new_line then
 		local temp = {}
 		for _ = 1, count do
-				table.insert(temp, texto)
+				table.insert(temp, text)
 		end
-		vim.api.nvim_put(temp, 'c', M.configs.colar_depois, M.configs.colar_mover_cursor)
+		vim.api.nvim_put(temp, 'c', M.configs.paste_after, M.configs.paste_move_cursor)
 	else
-		vim.api.nvim_put({ string.rep(texto, count) }, 'c', M.configs.colar_depois, M.configs.colar_mover_cursor)
+		vim.api.nvim_put({ string.rep(text, count) }, 'c', M.configs.paste_after, M.configs.paste_move_cursor)
 	end
 
 	M.pre_index = index
@@ -125,7 +130,7 @@ end
 
 ---@param opts? any
 function M.procurarTelescope(opts)
-	local texto = vim.fn.readfile(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+	local texto = vim.fn.readfile(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 
 	local pickers = require("telescope.pickers")
 	local finders = require("telescope.finders")
@@ -146,7 +151,7 @@ function M.procurarTelescope(opts)
 			actions.select_default:replace(function()
 				actions.close(prompt_bufnr)
 				local selection = action_state.get_selected_entry()
-				vim.api.nvim_put({ selection[1] }, "", M.configs.colar_depois, M.configs.colar_mover_cursor)
+				vim.api.nvim_put({ selection[1] }, "", M.configs.paste_after, M.configs.paste_move_cursor)
 
 			end)
 			return true
@@ -156,7 +161,7 @@ function M.procurarTelescope(opts)
 end
 
 function M.mostrarLista()
-	local texto = vim.fn.readfile(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+	local texto = vim.fn.readfile(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 
 	-- TODO: Entender os argumentos
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -204,7 +209,7 @@ function M.mostrarLista()
 
 		vim.api.nvim_win_close(win, true)
 		M.pre_index = lline
-		M.colar(true)
+		M.paste(true)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "x", function()
@@ -218,7 +223,7 @@ function M.mostrarLista()
 
 		M.remover(lline)
 		vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
-		texto = vim.fn.readfile(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+		texto = vim.fn.readfile(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, texto)
 		vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 
@@ -256,7 +261,7 @@ function M.editar(index)
 		index = 1
 	end
 
-	vim.cmd("tabnew " .. M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+	vim.cmd("tabnew " .. M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 
 	vim.fn.cursor(index, 1)
 end
@@ -272,10 +277,10 @@ function M.remover(index)
 		end
 	end
 
-	local texto = vim.fn.readfile(M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+	local texto = vim.fn.readfile(M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 
 	table.remove(texto, index)
-	vim.fn.writefile(texto, M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt")
+	vim.fn.writefile(texto, M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt")
 end
 
 ---@param caminho? string
@@ -284,7 +289,7 @@ end
 --Preferível não passar nada, que usa o do projeto/pasta atual.
 function M.limpar(caminho)
 	if not caminho then
-		caminho = M.dir_config .. M.vpasta_raiz:gsub("[/\\]", "_") .. ".txt"
+		caminho = M.dir_config .. M.vroot_folder:gsub("[/\\]", "_") .. ".txt"
 	end
 
 	vim.fn.delete(caminho)
@@ -301,10 +306,10 @@ end
 -- { "<leader>,p", M.colar, { silent = true } }
 -- { "<C-p>", M.colar, nil, "i" }
 local acoes = {
-	salvar = { M.salvar, { "n", "v" } },
+	salvar = { M.save, { "n", "v" } },
 	salvarP = { M.salvarP, { "n", "v" } },
-	colar = { M.colar, { "n", "v" }  },
-	colar_repetir = { function() M.colar(true, false) end, { "n", "v" }  },
+	colar = { M.paste, { "n", "v" }  },
+	colar_repetir = { function() M.paste(true, false) end, { "n", "v" }  },
 	editar = { M.editar, { "n", "v" }  },
 	remover = { M.remover, { "n", "v" }  },
 	editar_index = { function() M.editar(tonumber(vim.fn.input({ prompt = "Index: "}))) end, { "n", "v" }  },
@@ -312,8 +317,8 @@ local acoes = {
 	telescope = { function() M.procurarTelescope(require("telescope.themes").get_ivy({})) end, { "n", "v" }  },
 
 	nova_linha = { function()
-		M.configs.nova_linha = not M.configs.nova_linha
-		print("Nova linha: " .. tostring(M.configs.nova_linha))
+		M.configs.new_line = not M.configs.new_line
+		print("Nova linha: " .. tostring(M.configs.new_line))
 	end, { "n", "v" } }
 }
 
@@ -352,20 +357,20 @@ function M.setup(opts)
 		M.configs.editar_padrao = true
 	end
 	if opts.colar_depois then
-		M.configs.colar_depois = true
+		M.configs.paste_after = true
 	end
 	if opts.colar_mover_cursor == false then
-		M.configs.colar_mover_cursor = false
+		M.configs.paste_move_cursor = false
 	end
 	if opts.nova_linha then
-		M.configs.nova_linha = true
+		M.configs.new_line = true
 	end
 	if opts.altura_lista then
 		M.configs.altura_lista = opts.altura_lista
 		-- print(M.configs.altura_lista)
 	end
 	if opts.novo_count then
-		M.configs.novo_count = opts.novo_count
+		M.configs.new_count = opts.novo_count
 	end
 	if opts.verificar_pasta == false then
 		vim.api.nvim_create_autocmd("DirChanged", { callback = function()

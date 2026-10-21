@@ -70,3 +70,6 @@ meuclip.setup({
 - maps \[dictionary]: Um dicionário com uma chave, que é o nome do atalho, seguido do seu valor que é uma string com o atalho. `{ aaa = "...", bbb = "...", ... }`.
 - merge_maps \[boolean]: Se deve mesclar `(true)` ou substituir os atalhos padrãos com os do usuário `(false)`.
 - maps_opts \[dictionary]: As opções para vim.keymap.set(\~, \~, \~, map_opts), como { desc = "~", remap = true, silent = true }.
+
+If you are able to, consider donating:
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D5U727LX6E)
