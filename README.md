@@ -72,4 +72,5 @@ meuclip.setup({
 - maps_opts \[dictionary]: As opções para vim.keymap.set(\~, \~, \~, map_opts), como { desc = "~", remap = true, silent = true }.
 
 If you are able to, consider donating:
+  
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D5U727LX6E)

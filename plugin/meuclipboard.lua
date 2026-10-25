@@ -1,9 +1,8 @@
--- vim.api.nvim_create_user_command("Meusalvar", function(argumentos)
-vim.api.nvim_create_user_command("Meusave", function(argumentos)
-		require("meuclipboard").save(argumentos.args)
+vim.api.nvim_create_user_command("Meusalvar", function(argumentos)
+		require("meuclipboard").salvar(argumentos.args)
 	end, { nargs =  1 })
 
-vim.api.nvim_create_user_command("Meupaste",function() require("meuclipboard").paste() end, {})
+vim.api.nvim_create_user_command("Meucolar",function() require("meuclipboard").colar() end, {})
 
 --vim.api.nvim_create_autocmd("DirChanged", { callback = function()
 --	local lgit_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
